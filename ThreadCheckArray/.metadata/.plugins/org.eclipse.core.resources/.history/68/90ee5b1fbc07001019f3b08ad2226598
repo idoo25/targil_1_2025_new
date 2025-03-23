@@ -1,0 +1,66 @@
+public class ThreadCheckArray implements Runnable {
+    private boolean flag;
+    private boolean[] winArray;
+    SharedData sd;
+    ArrayList<Integer> array; // Change to ArrayList
+    int b;
+
+    public ThreadCheckArray(SharedData sd) {
+        this.sd = sd;
+        synchronized (sd) {
+            array = sd.getArray(); // This now returns ArrayList
+            b = sd.getB();
+        }
+        winArray = new boolean[array.size()]; // Use size() instead of length
+    }
+
+    void rec(int n, int b) {
+        synchronized (sd) {
+            if (sd.getFlag())
+                return;
+        }
+        if (n == 1) {
+            if (b == 0 || b == array.get(0)) { // Use get(0) instead of array[n-1]
+                flag = true;
+                synchronized (sd) {
+                    sd.setFlag(true);
+                }
+            }
+            if (b == array.get(0)) // Use get(0) instead of array[n-1]
+                winArray[0] = true;
+            return;
+        }
+
+        rec(n-1, b - array.get(n-1)); // Use get(n-1) instead of array[n-1]
+        if (flag)
+            winArray[n-1] = true;
+        synchronized (sd) {
+            if (sd.getFlag())
+                return;
+        }
+        rec(n-1, b);
+    }
+
+    public void run() {
+        if (array.size() != 1) // Use size() instead of length
+            if (Thread.currentThread().getName().equals("thread1"))
+                rec(array.size()-1, b - array.get(array.size() - 1)); // Use size() and get()
+            else
+                rec(array.size()-1, b);
+        if (array.size() == 1) // Use size() instead of length
+            if (b == array.get(0) && !flag) { // Use get(0) instead of array[0]
+                winArray[0] = true;
+                flag = true;
+                synchronized (sd) {
+                    sd.setFlag(true);
+                }
+            }
+        if (flag) {
+            if (Thread.currentThread().getName().equals("thread1"))
+                winArray[array.size() - 1] = true; // Use size() instead of length
+            synchronized (sd) {
+                sd.setWinArray(winArray);
+            }
+        }
+    }
+}
