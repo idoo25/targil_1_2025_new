@@ -1,3 +1,4 @@
+// hello
 public class SharedData 
 {
 	private int [] array;
